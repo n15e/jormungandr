@@ -23,7 +23,7 @@ use chain_addr::Discrimination;
 use chain_core::property::Block as _;
 use chain_impl_mockchain::certificate::{Certificate, PoolId};
 use chain_impl_mockchain::fee::LinearFee;
-use chain_impl_mockchain::multiverse::GCRoot;
+use chain_impl_mockchain::multiverse;
 use std::convert::Infallible;
 use std::sync::Arc;
 use tokio::prelude::*;
@@ -228,7 +228,10 @@ impl ExplorerDB {
     /// chain length is greater than the current.
     /// This doesn't perform any validation on the given block and the previous state, it
     /// is assumed that the Block is valid
-    pub fn apply_block(&mut self, block: Block) -> impl Future<Item = GCRoot, Error = Error> {
+    fn apply_block(
+        &mut self,
+        block: Block,
+    ) -> impl Future<Item = multiverse::Ref<State>, Error = Error> {
         let previous_block = block.header.block_parent_hash();
         let chain_length = block.header.chain_length();
         let block_id = block.header.hash();

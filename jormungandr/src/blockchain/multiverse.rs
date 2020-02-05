@@ -1,5 +1,5 @@
 use crate::blockcfg::{ChainLength, HeaderHash, Ledger, Multiverse as MultiverseData};
-use chain_impl_mockchain::multiverse::GCRoot;
+use chain_impl_mockchain::multiverse;
 use std::convert::Infallible;
 use tokio::{prelude::*, sync::lock::Lock};
 
@@ -19,7 +19,7 @@ impl<T> Multiverse<T> {
         chain_length: ChainLength,
         hash: HeaderHash,
         value: T,
-    ) -> impl Future<Item = GCRoot, Error = Infallible> {
+    ) -> impl Future<Item = multiverse::Ref<T>, Error = Infallible> {
         let mut inner = self.inner.clone();
 
         future::poll_fn(move || Ok(inner.poll_lock()))
@@ -31,7 +31,8 @@ impl<T: Clone> Multiverse<T> {
     pub fn get(&self, hash: HeaderHash) -> impl Future<Item = Option<T>, Error = Infallible> {
         let mut inner = self.inner.clone();
 
-        future::poll_fn(move || Ok(inner.poll_lock())).map(move |guard| guard.get(&hash).cloned())
+        future::poll_fn(move || Ok(inner.poll_lock()))
+            .map(move |guard| guard.get(&hash).as_deref().cloned())
     }
 }
 
